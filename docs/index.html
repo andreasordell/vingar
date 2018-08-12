@@ -1,0 +1,182 @@
+<html>
+<head>
+    <title>Generate SQL | VINGAR</title>
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+          crossorigin="anonymous">
+    <style>
+        #generatedSql {
+            font-family: monospace;
+        }
+
+        .mt-10 {
+            margin-top: 10px;
+        }
+
+        ::placeholder {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6 mt-10">
+            <h1>Generate SQL</h1>
+
+            <form class="needs-validation" novalidate>
+                <div class="form-group">
+                    <label for="inputDate">Start date</label>
+                    <input type="datetime-local" class="form-control" id="inputDate" required/>
+                    <div class="invalid-feedback">Start date is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputName">Name</label>
+                    <input type="text" class="form-control" id="inputName" placeholder="Name of event" required/>
+                    <div class="invalid-feedback">Name is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inputName">Location</label>
+                    <input type="text" class="form-control" id="inputLocation" placeholder="Location of event" required/>
+                    <div class="invalid-feedback">Location is required.</div>
+                </div>
+
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-secondary active">
+                        <input type="radio" id="inputOccuranceBiweekly" value="weekly" name="inputOccurance" checked/>
+                        Weekly
+                    </label>
+                    <label class="btn btn-secondary">
+                        <input type="radio" id="inputOccuranceWeekly" value="biweekly" name="inputOccurance"/> Bi-weekly
+                    </label>
+                </div>
+
+                <div class="form-group mt-10">
+                    <label for="inputCount">Count</label>
+                    <input id="inputCount" class="form-control" type="number" value="1" required/>
+                    <small class="form-text form-muted">Number of times event is repeated.</small>
+                    <div class="invalid-feedback">Number of times is required.</div>
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" class="btn btn-primary" id="buttonGenerate" value="Generate SQL"/>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6 mt-10">
+            <h1>Output</h1>
+            <div class="form-group">
+                <label for="generatedSql">Generated SQL</label>
+                <textarea class="form-control form-control-sm" id="generatedSql" rows="20"></textarea>
+                <a class="btn btn-sm btn-outline-primary mt-10" id="buttonCopyToClipboard" href="javascript:void(0)">Copy generated SQL</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+        integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+        integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+        crossorigin="anonymous"></script>
+
+
+<script>
+
+    function initializeForm() {
+        const dateTime = new Date();
+        const dateTimeString = dateTime.getFullYear() + "-" + ("0" + (dateTime.getMonth() + 1)).substr(0, 2) + "-" + dateTime.getDate() + "T18:30:00";
+        $('#inputDate').val(dateTimeString);
+
+        $('#buttonCopyToClipboard').on('click', (evt) => {
+            copyToClipboard($('#generatedSql').val());
+            evt.preventDefault();
+        })
+    }
+
+    function generateSqlFromFormInput() {
+        const count = parseInt($('#inputCount').val());
+        const name = $('#inputName').val();
+        const location = $('#inputLocation').val();
+        const date = Date.parse($('#inputDate').val());
+        const timeInDay = 24 * 60 * 60 * 1000;
+        const factor = $('input[name="inputOccurance"]:checked').val() == 'weekly' ? 1 : 2;
+
+        let generated = '';
+
+        for (var i = 0; i < count; i++) {
+
+            let eventDate = date + (((i + 1) * (7 * factor)) * timeInDay);
+
+            generated += generate(name, eventDate, location);
+        }
+
+        $('#generatedSql').val(generated)
+    }
+
+    $(document).ready(() => {
+        initializeForm();
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                else {
+                    generateSqlFromFormInput();
+                    event.preventDefault();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+    });
+
+    function generate(name, date, location) {
+        const startDate = new Date(date);
+        const endDate = new Date(date + (90 * 60 * 1000));
+
+        const startDateString = generateSqlDateString(startDate);
+        const endDateString = generateSqlDateString(endDate);
+
+        const template = `INSERT INTO \`stockholmsvinga\`.\`Activities\` (\`ActivityID\`, \`ActivityName\`, \`StartDate\`, \`EndDate\`, \`Place\`, \`Description\`, \`Comments\`, \`NeedsUsers\`)
+VALUES (NULL , '${name}', '${startDateString}', '${endDateString}', '${location}', NULL , NULL , '1');
+
+`;
+        return template;
+    }
+
+    function generateSqlDateString(date) {
+        return date.getFullYear() + '-'
+            + ("0" + (date.getMonth() + 1)).slice(-2) + '-'
+            + ("0" + (date.getDate())).slice(-2) + ' '
+            + ("0" + (date.getHours())).substr(-2) + ':'
+            + ("0" + (date.getMinutes())).substr(-2)
+            + ":00";
+    }
+
+    const copyToClipboard = str => {
+        const el = document.createElement('textarea');
+        el.value = str;
+        el.setAttribute('readonly', '');
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    };
+</script>
+
+</body>
+</html>
