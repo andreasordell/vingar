@@ -1,0 +1,12 @@
+INSERT INTO `stockholmsvinga`.`Activities` (`ActivityID`, `ActivityName`, `StartDate`, `EndDate`, `Place`, `Description`, `Comments`, `NeedsUsers`)
+VALUES (NULL , 'Träning i kanalhallen', '2018-08-19 18:30:00', '2018-08-19 20:00:00', 'Kanalhallen', NULL , NULL , '1');
+
+INSERT INTO `stockholmsvinga`.`Activities` (`ActivityID`, `ActivityName`, `StartDate`, `EndDate`, `Place`, `Description`, `Comments`, `NeedsUsers`)
+VALUES (NULL , 'Träning i kanalhallen', '2018-08-26 18:30:00', '2018-08-26 20:00:00', 'Kanalhallen', NULL , NULL , '1');
+
+INSERT INTO `stockholmsvinga`.`Activities` (`ActivityID`, `ActivityName`, `StartDate`, `EndDate`, `Place`, `Description`, `Comments`, `NeedsUsers`)
+VALUES (NULL , 'Träning i kanalhallen', '2018-09-02 18:30:00', '2018-09-02 20:00:00', 'Kanalhallen', NULL , NULL , '1');
+
+INSERT INTO `stockholmsvinga`.`Activities` (`ActivityID`, `ActivityName`, `StartDate`, `EndDate`, `Place`, `Description`, `Comments`, `NeedsUsers`)
+VALUES (NULL , 'Träning i kanalhallen', '2018-09-09 18:30:00', '2018-09-09 20:00:00', 'Kanalhallen', NULL , NULL , '1');
+
