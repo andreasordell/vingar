@@ -1,6 +1,8 @@
 <html>
 <head>
     <title>Generate SQL | VINGAR</title>
+    <meta name="viewport" content="width=device-width">
+
     <link rel="stylesheet"
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
@@ -22,7 +24,7 @@
 <body>
 <div class="container-fluid">
     <div class="row justify-content-center">
-        <div class="col-md-6 mt-10">
+        <div class="col-lg-6 col-sm mt-10">
             <h1>Generate SQL</h1>
 
             <form class="needs-validation" novalidate>
@@ -32,7 +34,21 @@
                     <div class="invalid-feedback">Start date is required.</div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-check form-check-inline">
+                    <input type="radio" value="A" class="form-check-input" id="teamName1" name="inputTeamName">
+                    <label for="teamName1" class="form-check-label">A-laget</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" value="B" class="form-check-input" id="teamName2" name="inputTeamName">
+                    <label for="teamName2" class="form-check-label">B-laget</label>
+                </div>
+
+                <div class="form-check form-check-inline">
+                    <input type="radio" value="C" class="form-check-input" id="teamName3" name="inputTeamName">
+                    <label for="teamName3" class="form-check-label">C-laget</label>
+                </div>
+
+                <div class="form-group mt-2">
                     <label for="inputName">Name</label>
                     <input type="text" class="form-control" id="inputName" placeholder="Name of event" required/>
                     <div class="invalid-feedback">Name is required.</div>
@@ -40,7 +56,8 @@
 
                 <div class="form-group">
                     <label for="inputName">Location</label>
-                    <input type="text" class="form-control" id="inputLocation" placeholder="Location of event" required/>
+                    <input type="text" class="form-control" id="inputLocation" placeholder="Location of event"
+                           required/>
                     <div class="invalid-feedback">Location is required.</div>
                 </div>
 
@@ -54,7 +71,7 @@
                     </label>
                 </div>
 
-                <div class="form-group mt-10">
+                <div class="form-group mt-3">
                     <label for="inputCount">Count</label>
                     <input id="inputCount" class="form-control" type="number" value="1" required/>
                     <small class="form-text form-muted">Number of times event is repeated.</small>
@@ -66,12 +83,13 @@
                 </div>
             </form>
         </div>
-        <div class="col-md-6 mt-10">
+        <div class="col-lg-6 col-sm mt-10">
             <h1>Output</h1>
             <div class="form-group">
                 <label for="generatedSql">Generated SQL</label>
                 <textarea class="form-control form-control-sm" id="generatedSql" rows="20"></textarea>
-                <a class="btn btn-sm btn-outline-primary mt-10" id="buttonCopyToClipboard" href="javascript:void(0)">Copy generated SQL</a>
+                <a class="btn btn-sm btn-outline-primary mt-10" id="buttonCopyToClipboard" href="javascript:void(0)">Copy
+                    generated SQL</a>
             </div>
         </div>
     </div>
@@ -90,15 +108,43 @@
 
 <script>
 
-    function initializeForm() {
-        const dateTime = new Date();
-        const dateTimeString = dateTime.getFullYear() + "-" + ("0" + (dateTime.getMonth() + 1)).substr(0, 2) + "-" + dateTime.getDate() + "T18:30:00";
-        $('#inputDate').val(dateTimeString);
+    const data = {
+        teams: ['A-lag', 'B-lag', 'C-lag'],
+        weekdays: ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag', 'Lördag', 'Söndag'],
+        locations: ['Kanalhallen', 'Vasa real', 'Bandhagen']
+    };
+
+    function setEventName() {
+        // Evaluate weekday
+        const date = new Date($('#inputDate').val());
+        const dayOfWeek = data.weekdays[date.getDay() - 1];
+
+        const team = $('input[name="inputTeamName"]:checked').val();
+        $('#inputName').val(dayOfWeek + ', ' + team + '-laget');
+    }
+
+    function hookUpEventHandlersToForm() {
+
+        $('#inputDate').on('change', function(evt) {
+            setEventName();
+        });
+
+        $('input[name=inputTeamName]').on('click', function(evt) {
+            setEventName();
+        });
 
         $('#buttonCopyToClipboard').on('click', (evt) => {
             copyToClipboard($('#generatedSql').val());
             evt.preventDefault();
         })
+    }
+
+    function initializeForm() {
+        const dateTime = new Date();
+        const dateTimeString = dateTime.getFullYear() + "-" + ("0" + (dateTime.getMonth() + 1)).substr(0, 2) + "-" + dateTime.getDate() + "T18:30:00";
+        $('#inputDate').val(dateTimeString);
+
+        hookUpEventHandlersToForm();
     }
 
     function generateSqlFromFormInput() {
@@ -110,8 +156,11 @@
         const factor = $('input[name="inputOccurance"]:checked').val() == 'weekly' ? 1 : 2;
 
         let generated = '';
+        generated = generate(name, date, location);
 
-        for (var i = 0; i < count; i++) {
+        let eventDate = date;
+
+        for (var i = 0; i < count-1; i++) {
 
             let eventDate = date + (((i + 1) * (7 * factor)) * timeInDay);
 
@@ -126,8 +175,8 @@
         // Fetch all the forms we want to apply custom Bootstrap validation styles to
         var forms = document.getElementsByClassName('needs-validation');
         // Loop over them and prevent submission
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
+        var validation = Array.prototype.filter.call(forms, function (form) {
+            form.addEventListener('submit', function (event) {
                 if (form.checkValidity() === false) {
                     event.preventDefault();
                     event.stopPropagation();
